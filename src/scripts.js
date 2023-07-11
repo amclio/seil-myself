@@ -1,6 +1,4 @@
-import { AutoTokenizer, BertTokenizer } from '@xenova/transformers'
-
-const apiKey = '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'
+import { AutoTokenizer } from '@xenova/transformers'
 
 const tokenizer = await AutoTokenizer.from_pretrained(
   'Xenova/bert-base-uncased'
@@ -13,23 +11,19 @@ const createPayload = (payload) => JSON.stringify(payload)
  * ChatGPT에게 Prompt에 따른 HTML 요청
  * 음답된 HTML을 리턴
  */
-async function getChatGPTResponse(prompt, existing) {
+async function getChatGPTResponse(prompt, key) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${key}`,
     },
     body: createPayload({
       model: 'gpt-3.5-turbo-16k-0613',
       messages: [
         {
           role: 'system',
-          content: `You are a helpful assistant for coding. You HAVE TO ONLY answer the codes. For example, if I request the HTML code, you answer only HTML codes with no additional sentences. DO NOT include the basic HTML like doctype, <html>. Only write the codes that will be inside the content body. ${
-            existing
-              ? `Here's the codes that already exist in the page: ${existing}`
-              : ''
-          }`,
+          content: `You are a helpful assistant for coding. You HAVE TO ONLY answer the codes. For example, if I request the HTML code, you answer only HTML codes with no additional sentences. DO NOT include the basic HTML like doctype, <html>. Only write the codes that will be inside the content body. `,
         },
         { role: 'user', content: prompt },
       ],
@@ -58,6 +52,7 @@ function insertHTML(html) {
  * Butto에 이벤트 리스너 등록 후, ChatGPT에 해당 프롬프트를 질의, HTML을 삽입.
  */
 const inputElement = document.getElementById('prompt')
+const keyElement = document.getElementById('key')
 const buttonElement = document.getElementById('submit')
 const tokenElement = document.getElementById('token')
 
@@ -71,7 +66,8 @@ buttonElement.addEventListener('click', async () => {
   buttonElement.innerText = 'Loading...'
 
   const prompt = inputElement.value
-  const html = await getChatGPTResponse(prompt)
+  const key = keyElement.value
+  const html = await getChatGPTResponse(prompt, key)
 
   buttonElement.innerText = 'Submit'
 
